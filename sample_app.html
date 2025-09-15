@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Static Site • Right-Side Slider with Docked Tabs</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --panel: #111735;
+            --muted: #c7c9d9;
+            --text: #eef2ff;
+            --accent: #6aa5ff;
+            --accent-2: #8b5cf6;
+            --border: rgba(255, 255, 255, 0.08);
+            --shadow: 0 10px 30px rgba(0, 0, 0, .25);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            color: var(--text);
+            background: radial-gradient(1200px 600px at 20% -10%, #1b2450, #0b1020);
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 20px 120px;
+            /* leave room for bottom dock */
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 24px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .03));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 16px;
+            backdrop-filter: blur(8px);
+            z-index: 5;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: .3px;
+            font-weight: 700;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .03));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+        .links {
+            display: grid;
+            gap: 8px;
+        }
+
+        .link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            transition: transform .08s ease, background .2s ease, border-color .2s ease;
+        }
+
+        .link:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, .06);
+            border-color: rgba(255, 255, 255, .18);
+        }
+
+        .link .favicon {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .link span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Slider */
+        .slider {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100dvh;
+            width: min(680px, 92vw);
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            box-shadow: -12px 0 30px rgba(0, 0, 0, .35);
+            transform: translateX(102%);
+            transition: transform .28s ease;
+            z-index: 50;
+            display: grid;
+            grid-template-rows: auto 1fr;
+        }
+
+        .slider.open {
+            transform: translateX(0);
+        }
+
+        .slider-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .03));
+        }
+
+        .slider-title {
+            flex: 1;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: .2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .icon-btn {
+            appearance: none;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            padding: 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .2s ease, border-color .2s ease, transform .06s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(255, 255, 255, .18);
+        }
+
+        .icon-btn:active {
+            transform: translateY(1px);
+        }
+
+        .slider-body {
+            position: relative;
+        }
+
+        .slider iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #0e132b;
+        }
+
+        /* Bottom Dock */
+        .dock {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 12px;
+            width: min(1000px, 96vw);
+            background: rgba(17, 23, 53, .78);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            z-index: 51;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+        }
+
+        .tabbar {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 4px 4px 2px;
+        }
+
+        .tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 240px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .2s ease, border-color .2s ease;
+        }
+
+        .tab.active {
+            outline: 2px solid rgba(106, 165, 255, .35);
+            background: rgba(106, 165, 255, .12);
+        }
+
+        .tab .title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab .close {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0 2px;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .tab .close:hover {
+            color: var(--text);
+        }
+
+        .dock-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .btn {
+            appearance: none;
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .03));
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            letter-spacing: .2px;
+        }
+
+        .btn:hover {
+            border-color: rgba(255, 255, 255, .18);
+        }
+
+        /* Helpers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        @media (max-width: 520px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Right-Side Slider with Minimize-to-Dock Tabs</h1>
+                <p>Click any link below. It opens in the right slider (via iframe). Minimize the slider to collect tabs
+                    in the bottom dock, then click a tab to restore.</p>
+            </div>
+            <button class="btn" id="clearAll">Clear All Tabs</button>
+        </header>
+
+        <section class="grid" aria-label="Link collections">
+            <article class="card">
+                <h3>Docs & News</h3>
+                <div class="links">
+                    <a class="link" href="https://developer.mozilla.org/" data-title="MDN Web Docs">
+                        <span class="favicon" aria-hidden="true">🌐</span>
+                        <span>MDN Web Docs</span>
+                    </a>
+                    <a class="link" href="https://www.wikipedia.org/" data-title="Wikipedia">
+                        <span class="favicon" aria-hidden="true">📚</span>
+                        <span>Wikipedia</span>
+                    </a>
+                    <a class="link" href="https://www.bbc.com/" data-title="BBC News">
+                        <span class="favicon" aria-hidden="true">📰</span>
+                        <span>BBC News</span>
+                    </a>
+                </div>
+            </article>
+
+            <article class="card">
+                <h3>Dev Tools</h3>
+                <div class="links">
+                    <a class="link" href="https://codesandbox.io/" data-title="CodeSandbox">
+                        <span class="favicon" aria-hidden="true">🧪</span>
+                        <span>CodeSandbox</span>
+                    </a>
+                    <a class="link" href="https://github.com/" data-title="GitHub">
+                        <span class="favicon" aria-hidden="true">🐙</span>
+                        <span>GitHub</span>
+                    </a>
+                    <a class="link" href="https://stackblitz.com/" data-title="StackBlitz">
+                        <span class="favicon" aria-hidden="true">⚡</span>
+                        <span>StackBlitz</span>
+                    </a>
+                </div>
+            </article>
+
+            <article class="card">
+                <h3>Design</h3>
+                <div class="links">
+                    <a class="link" href="https://dribbble.com/" data-title="Dribbble">
+                        <span class="favicon" aria-hidden="true">🎨</span>
+                        <span>Dribbble</span>
+                    </a>
+                    <a class="link" href="https://www.figma.com/" data-title="Figma">
+                        <span class="favicon" aria-hidden="true">📐</span>
+                        <span>Figma</span>
+                    </a>
+                    <a class="link" href="https://fonts.google.com/" data-title="Google Fonts">
+                        <span class="favicon" aria-hidden="true">🔤</span>
+                        <span>Google Fonts</span>
+                    </a>
+                </div>
+            </article>
+        </section>
+    </div>
+
+    <!-- Slider Panel -->
+    <aside class="slider" id="slider" aria-hidden="true" aria-label="Side panel">
+        <div class="slider-header">
+            <div class="slider-title" id="sliderTitle">&nbsp;</div>
+            <button class="icon-btn" id="minimizeBtn" title="Minimize to dock" aria-label="Minimize">
+                <!-- minimize icon -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <path d="M5 19h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <button class="icon-btn" id="closeBtn" title="Close" aria-label="Close">
+                <!-- close icon -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+        <div class="slider-body">
+            <iframe id="sliderFrame" title="Embedded content"></iframe>
+        </div>
+    </aside>
+
+    <!-- Bottom Dock / Tab Bar -->
+    <div class="dock" role="toolbar" aria-label="Tab dock">
+        <div class="tabbar" id="tabbar"></div>
+        <div class="dock-actions">
+            <button class="btn" id="newTabFromURL">Open URL…</button>
+        </div>
+    </div>
+
+    <template id="tabTemplate">
+        <div class="tab" data-id="">
+            <span class="favicon" aria-hidden="true" style="width:14px;height:14px;font-size:12px;">🔖</span>
+            <span class="title"></span>
+            <button class="close" title="Close tab" aria-label="Close tab">×</button>
+        </div>
+    </template>
+
+    <script>
+        // --- Simple Slider + Docked Tabs Manager ---
+        const slider = document.getElementById('slider');
+        const sliderTitle = document.getElementById('sliderTitle');
+        const sliderFrame = document.getElementById('sliderFrame');
+        const minimizeBtn = document.getElementById('minimizeBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const tabbar = document.getElementById('tabbar');
+        const tabTemplate = document.getElementById('tabTemplate');
+        const clearAll = document.getElementById('clearAll');
+        const newTabFromURL = document.getElementById('newTabFromURL');
+
+        /**
+         * State shape: { id: string, url: string, title: string }
+         */
+        let tabs = [];
+        let activeId = null;
+
+        // Utility to generate deterministic id based on URL
+        const makeId = (url) => 'tab-' + btoa(unescape(encodeURIComponent(url))).replace(/=+$/, '');
+
+        function openInSlider(url, title) {
+            const id = makeId(url);
+            const existing = tabs.find(t => t.id === id);
+            if (!existing) {
+                const t = { id, url, title: title || url };
+                tabs.push(t);
+                renderTabs();
+            }
+            setActive(id);
+            showSlider();
+        }
+
+        function setActive(id) {
+            activeId = id;
+            const t = tabs.find(x => x.id === id);
+            if (!t) { return; }
+            sliderTitle.textContent = t.title || t.url;
+            if (sliderFrame.src !== t.url) {
+                sliderFrame.src = t.url;
+            }
+            [...tabbar.children].forEach(el => el.classList.toggle('active', el.dataset.id === id));
+        }
+
+        function showSlider() {
+            slider.classList.add('open');
+            slider.setAttribute('aria-hidden', 'false');
+        }
+        function hideSlider() {
+            slider.classList.remove('open');
+            slider.setAttribute('aria-hidden', 'true');
+        }
+
+        function renderTabs() {
+            tabbar.innerHTML = '';
+            for (const t of tabs) {
+                const node = tabTemplate.content.firstElementChild.cloneNode(true);
+                node.dataset.id = t.id;
+                node.querySelector('.title').textContent = t.title || t.url;
+                node.addEventListener('click', (e) => {
+                    if (e.target.closest('.close')) return; // ignore when closing
+                    setActive(t.id);
+                    showSlider();
+                });
+                node.querySelector('.close').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeTab(t.id);
+                });
+                tabbar.appendChild(node);
+            }
+            // Keep active highlight if present
+            if (activeId) {
+                [...tabbar.children].forEach(el => el.classList.toggle('active', el.dataset.id === activeId));
+            }
+        }
+
+        function closeTab(id) {
+            const idx = tabs.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            tabs.splice(idx, 1);
+
+            if (activeId === id) {
+                // If closing the active tab, pick the previous one if available
+                const next = tabs[idx] || tabs[idx - 1];
+                if (next) {
+                    setActive(next.id);
+                } else {
+                    activeId = null; hideSlider(); sliderFrame.removeAttribute('src'); sliderTitle.textContent = '';
+                }
+            }
+            renderTabs();
+        }
+
+        // Link interception
+        document.querySelectorAll('a.link').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = a.getAttribute('href');
+                const title = a.dataset.title || a.textContent.trim();
+                openInSlider(url, title);
+            });
+        });
+
+        // Header buttons
+        minimizeBtn.addEventListener('click', () => hideSlider()); // minimize simply hides the panel but keeps tab(s)
+        closeBtn.addEventListener('click', () => { if (activeId) closeTab(activeId); });
+
+        clearAll.addEventListener('click', () => {
+            tabs = []; activeId = null; renderTabs(); hideSlider(); sliderFrame.removeAttribute('src'); sliderTitle.textContent = '';
+        });
+
+        // Open URL prompt
+        newTabFromURL.addEventListener('click', () => {
+            const url = prompt('Enter URL to open in the slider:');
+            if (!url) return;
+            try {
+                // Normalize URL (add https if missing)
+                const normalized = /^(https?:)?\/\//i.test(url) ? url : 'https://' + url;
+                openInSlider(normalized, new URL(normalized).host);
+            } catch (err) {
+                alert('Invalid URL');
+            }
+        });
+
+        // Keyboard shortcuts
+        // ESC to minimize, Ctrl+W to close active tab
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && slider.classList.contains('open')) { hideSlider(); }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'w') {
+                if (activeId) { e.preventDefault(); closeTab(activeId); }
+            }
+        });
+
+        // Optional: restore last session (simple, in-memory per load). To persist across reloads, uncomment below.
+        // window.addEventListener('beforeunload', () => localStorage.setItem('sliderTabs', JSON.stringify({tabs, activeId})));
+        // window.addEventListener('DOMContentLoaded', () => {
+        //   try{ const saved = JSON.parse(localStorage.getItem('sliderTabs')||'null');
+        //     if(saved && saved.tabs?.length){ tabs = saved.tabs; renderTabs(); if(saved.activeId){ setActive(saved.activeId); showSlider(); } }
+        //   }catch{}
+        // });
+
+        // Accessibility niceties: trap focus when slider is open
+        slider.addEventListener('transitionend', () => {
+            if (slider.classList.contains('open')) minimizeBtn.focus();
+        });
+    </script>
+</body>
+</html>

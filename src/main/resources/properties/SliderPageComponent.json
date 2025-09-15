@@ -1,0 +1,9 @@
+[
+  {
+    "title": "General",
+    "properties": [
+      { "name": "id", "label": "ID", "type": "textfield", "required": "true" },
+      { "name": "note", "label": "Note", "type": "label", "value": "This element injects and runs a bundled script after page load." }
+    ]
+  }
+]

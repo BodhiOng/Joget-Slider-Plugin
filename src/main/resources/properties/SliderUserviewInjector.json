@@ -1,0 +1,8 @@
+[
+  {
+    "title": "General",
+    "properties": [
+      { "name": "note", "label": "Note", "type": "label", "value": "Injects working_script.js on Userview runtime pages. Place this menu anywhere; it will not render a visible link." }
+    ]
+  }
+]
